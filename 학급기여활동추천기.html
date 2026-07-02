@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>학급 기여 활동 추천기</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link
+  rel="stylesheet"
+  as="style"
+  crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
+/>
+
+<style>
+:root {
+  --color-white: #ffffff;
+  --color-sky: #d7f0fb;
+  --color-sky-strong: #6dc8ec;
+  --color-mint: #cdf5ea;
+  --color-mint-strong: #3ecfa6;
+  --color-yellow: #fff3c2;
+  --color-yellow-strong: #ffcb3d;
+  --color-text: #3a3a4a;
+  --color-text-soft: #6b6f8a;
+  --color-danger: #ff8fa3;
+  --shadow-soft: 0 8px 24px rgba(109, 200, 236, 0.25);
+  --shadow-card: 0 10px 30px rgba(76, 91, 158, 0.14);
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 14px;
+  --font-main: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-main);
+  color: var(--color-text);
+  background: linear-gradient(160deg, var(--color-sky) 0%, var(--color-white) 45%, var(--color-mint) 100%);
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px 56px;
+}
+
+.screen { display: none; width: 100%; max-width: 720px; animation: fadeIn 0.5s ease; }
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 36px 30px;
+}
+
+.page-header { text-align: center; margin-bottom: 24px; }
+.page-header .emoji { font-size: 3rem; margin-bottom: 6px; }
+.page-header h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 8px; }
+.page-header p { color: var(--color-text-soft); font-size: 0.95rem; line-height: 1.6; }
+
+/* 폼 공통 */
+.field-group { margin-bottom: 26px; }
+.field-group label.field-title {
+  display: block;
+  font-weight: 800;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.field-hint { color: var(--color-text-soft); font-size: 0.82rem; margin-bottom: 12px; }
+
+input[type="text"], select {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-family: var(--font-main);
+  border: 2px solid var(--color-sky);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: #fbfeff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, select:focus {
+  border-color: var(--color-sky-strong);
+  box-shadow: 0 0 0 4px rgba(109, 200, 236, 0.2);
+}
+
+.chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--font-main);
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--color-mint);
+  background: var(--color-white);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip:hover { transform: translateY(-2px); }
+.chip.selected {
+  background: var(--color-mint-strong);
+  border-color: var(--color-mint-strong);
+  color: var(--color-white);
+}
+
+.mbti-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.mbti-btn {
+  flex: 1;
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 14px 6px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-yellow);
+  background: var(--color-white);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+.mbti-btn small { display: block; font-weight: 500; font-size: 0.72rem; opacity: 0.85; }
+.mbti-btn:hover { transform: translateY(-2px); }
+.mbti-btn.selected {
+  background: var(--color-yellow-strong);
+  border-color: var(--color-yellow-strong);
+  color: var(--color-white);
+}
+.mbti-skip-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-soft);
+  margin-top: 4px;
+}
+
+.btn-primary {
+  display: inline-block;
+  text-decoration: none;
+  font-family: var(--font-main);
+  font-weight: 800;
+  color: var(--color-white);
+  background: linear-gradient(135deg, var(--color-sky-strong), var(--color-mint-strong));
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s;
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+.btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 28px rgba(62, 207, 166, 0.35); }
+.btn-primary:active { transform: translateY(0) scale(0.98); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-big { width: 100%; padding: 18px 0; font-size: 1.1rem; }
+
+.btn-ghost {
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-soft);
+  background: transparent;
+  border: 2px solid #e2e6f0;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-ghost:hover { background: var(--color-white); border-color: var(--color-sky-strong); color: var(--color-sky-strong); }
+
+.warning-text {
+  margin-top: 10px;
+  color: var(--color-danger);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.warning-text.hidden { display: none; }
+
+/* 결과 화면 */
+.result-header { text-align: center; margin-bottom: 22px; }
+.result-header .emoji { font-size: 2.6rem; margin-bottom: 4px; }
+.result-header h2 { font-size: 1.4rem; font-weight: 800; }
+.result-header p { color: var(--color-text-soft); font-size: 0.92rem; margin-top: 6px; }
+
+.activity-card {
+  background: linear-gradient(160deg, #ffffff, var(--color-sky));
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+  border: 2px solid transparent;
+  animation: popIn 0.4s ease both;
+}
+.activity-card:nth-child(2) { animation-delay: 0.08s; }
+.activity-card:nth-child(3) { animation-delay: 0.16s; }
+.activity-card:nth-child(4) { animation-delay: 0.24s; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.activity-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.activity-emoji { font-size: 2rem; }
+.activity-title { font-size: 1.1rem; font-weight: 800; }
+.activity-desc { font-size: 0.9rem; color: var(--color-text-soft); line-height: 1.55; margin-bottom: 8px; }
+.activity-reason {
+  font-size: 0.85rem;
+  color: var(--color-mint-strong);
+  font-weight: 700;
+  background: rgba(62, 207, 166, 0.12);
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.result-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; justify-content: center; }
+
+.copy-toast {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--color-text);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+}
+.copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 560px) {
+  .card { padding: 26px 18px; }
+  .mbti-row { flex-wrap: wrap; }
+  .mbti-btn { flex: 1 1 45%; }
+}
+</style>
+</head>
+<body>
+
+<main id="app">
+
+  <!-- ============== 입력 화면 ============== -->
+  <section id="screen-form" class="screen active">
+    <div class="card">
+      <div class="page-header">
+        <div class="emoji">🌟</div>
+        <h1>학급 기여 활동 추천기</h1>
+        <p>내가 선택한 직업과 나의 특징으로<br />우리 반에서 할 수 있는 멋진 활동을 찾아드려요!</p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-title" for="input-name">✏️ 이름 (선택)</label>
+        <input type="text" id="input-name" placeholder="예) 김낭만" maxlength="10" autocomplete="off" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-title" for="input-job">🏆 내가 최종 선택한 직업</label>
+        <div class="field-hint">직업 월드컵에서 뽑힌 직업을 골라주세요.</div>
+        <select id="input-job"></select>
+      </div>
+
+      <div class="field-group">
+        <div class="field-title">💪 내가 잘하는 것 (최대 4개)</div>
+        <div class="field-hint">해당하는 것을 골라주세요. 여러 개 골라도 좋아요!</div>
+        <div class="chip-wrap" id="strength-chips"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-title">💛 내가 좋아하는 것 (최대 4개)</div>
+        <div class="field-hint">해당하는 것을 골라주세요.</div>
+        <div class="chip-wrap" id="interest-chips"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-title">🔮 나의 MBTI</div>
+        <div class="field-hint">모르면 건너뛰어도 괜찮아요!</div>
+
+        <div class="mbti-row">
+          <button type="button" class="mbti-btn" data-axis="EI" data-value="E">E<small>사람들과 함께</small></button>
+          <button type="button" class="mbti-btn" data-axis="EI" data-value="I">I<small>혼자 몰입</small></button>
+        </div>
+        <div class="mbti-row">
+          <button type="button" class="mbti-btn" data-axis="SN" data-value="S">S<small>현실적, 꼼꼼</small></button>
+          <button type="button" class="mbti-btn" data-axis="SN" data-value="N">N<small>상상력, 아이디어</small></button>
+        </div>
+        <div class="mbti-row">
+          <button type="button" class="mbti-btn" data-axis="TF" data-value="T">T<small>논리적 판단</small></button>
+          <button type="button" class="mbti-btn" data-axis="TF" data-value="F">F<small>마음을 살핌</small></button>
+        </div>
+        <div class="mbti-row">
+          <button type="button" class="mbti-btn" data-axis="JP" data-value="J">J<small>계획적</small></button>
+          <button type="button" class="mbti-btn" data-axis="JP" data-value="P">P<small>즉흥적</small></button>
+        </div>
+        <p class="mbti-skip-note">※ 성격유형은 참고용이에요. 몰라도 추천받는 데 문제 없어요.</p>
+      </div>
+
+      <button type="button" id="submit-btn" class="btn-primary btn-big" disabled>
+        활동 추천받기 ✨
+      </button>
+      <p id="job-warning" class="warning-text hidden">먼저 직업을 선택해 주세요!</p>
+    </div>
+  </section>
+
+  <!-- ============== 결과 화면 ============== -->
+  <section id="screen-result" class="screen">
+    <div class="card">
+      <div class="result-header">
+        <div class="emoji">🎁</div>
+        <h2><span id="result-name"></span><span id="result-job-wrap"> · <span id="result-job"></span></span></h2>
+        <p>이런 활동으로 우리 반에 기여해볼 수 있어요!</p>
+      </div>
+
+      <div id="activity-list"></div>
+
+      <div class="result-buttons">
+        <button type="button" id="reroll-btn" class="btn-primary">🔄 다시 추천받기</button>
+        <button type="button" id="copy-btn" class="btn-ghost">📋 결과 복사하기</button>
+        <button type="button" id="restart-btn" class="btn-ghost">🏠 처음으로</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="copy-toast" class="copy-toast">결과가 복사되었어요!</div>
+
+<script>
+/* =========================================================
+   학급 기여 활동 추천기 - 데이터 & 로직
+========================================================= */
+
+// 직업 월드컵 데이터의 직업명 -> 분야 매핑 (64개)
+const JOB_FIELD_MAP = {
+  "교사": "교육", "유치원교사": "교육", "특수교사": "교육", "대학교수": "교육", "학습코치": "교육", "사서교사": "교육",
+  "의사": "보건·의료", "간호사": "보건·의료", "약사": "보건·의료", "치과의사": "보건·의료", "한의사": "보건·의료", "응급구조사": "보건·의료",
+  "과학자": "과학·기술", "프로그래머": "과학·기술", "로봇공학자": "과학·기술", "우주비행사": "과학·기술", "데이터분석가": "과학·기술", "AI연구원": "과학·기술",
+  "요리사": "서비스·관광", "파티시에": "서비스·관광", "여행가이드": "서비스·관광", "호텔리어": "서비스·관광", "승무원": "서비스·관광", "바리스타": "서비스·관광",
+  "경찰관": "공공·안전", "소방관": "공공·안전", "군인": "공공·안전", "외교관": "공공·안전", "사회복지사": "공공·안전",
+  "화가": "문화·예술", "음악가": "문화·예술", "배우": "문화·예술", "작가": "문화·예술", "무용가": "문화·예술",
+  "방송PD": "미디어", "기자": "미디어", "유튜버": "미디어", "아나운서": "미디어", "사진작가": "미디어",
+  "건축가": "디자인·건축", "디자이너": "디자인·건축", "인테리어디자이너": "디자인·건축", "그래픽디자이너": "디자인·건축", "도시계획가": "디자인·건축",
+  "운동선수": "스포츠", "축구선수": "스포츠", "체육교사": "스포츠", "스포츠트레이너": "스포츠", "심판": "스포츠",
+  "환경운동가": "자연·환경", "기상캐스터": "자연·환경", "산림기사": "자연·환경", "농부": "자연·환경", "원예사": "자연·환경",
+  "판사": "법·행정", "변호사": "법·행정", "공무원": "법·행정", "검사": "법·행정", "국회의원": "법·행정",
+  "수의사": "동물·생명", "동물조련사": "동물·생명", "사육사": "동물·생명", "생명공학자": "동물·생명", "반려동물미용사": "동물·생명"
+};
+
+const STRENGTH_OPTIONS = [
+  "글쓰기", "그림그리기", "말하기/발표", "노래/음악", "운동", "만들기/손재주",
+  "계산/논리", "관찰력", "정리정돈", "리더십", "공감/배려", "컴퓨터/기술",
+  "요리", "동식물 돌보기", "사진/영상", "협동"
+];
+
+const INTEREST_OPTIONS = [
+  "책읽기", "그림", "음악", "운동", "게임", "요리",
+  "동물", "자연", "과학실험", "컴퓨터", "영화/드라마", "여행",
+  "만들기", "수학", "역사", "봉사"
+];
+
+// 분야별 학급 기여 활동 뱅크 (분야당 5개, 총 60개)
+const ACTIVITY_BANK = {
+  "교육": [
+    { title: "또래 학습 도우미", emoji: "📖", desc: "쉬는 시간에 친구의 공부를 도와줘요.", tags: ["말하기/발표", "공감/배려", "책읽기"], extrovert: true, structured: false },
+    { title: "아침 독서 리더", emoji: "📚", desc: "아침 독서 시간마다 책을 소개하고 함께 읽어요.", tags: ["책읽기", "말하기/발표"], extrovert: true, structured: true },
+    { title: "미니 강좌 열기", emoji: "🎓", desc: "내가 잘하는 것을 친구들에게 짧게 가르쳐줘요.", tags: ["말하기/발표", "리더십"], extrovert: true, structured: true },
+    { title: "학급 적응 도우미", emoji: "🤝", desc: "전학생이나 도움이 필요한 친구를 살펴줘요.", tags: ["공감/배려", "협동"], extrovert: false, structured: false },
+    { title: "준비물·일정 게시판 관리", emoji: "🗓️", desc: "학급 준비물과 일정을 정리해서 안내해요.", tags: ["정리정돈", "계산/논리"], extrovert: false, structured: true }
+  ],
+  "보건·의료": [
+    { title: "건강 캠페인 포스터 만들기", emoji: "🧼", desc: "손씻기, 바른 자세 등 건강 캠페인 포스터를 만들어요.", tags: ["그림그리기", "정리정돈"], extrovert: false, structured: true },
+    { title: "마음 우체통 운영", emoji: "💌", desc: "친구들의 고민을 익명으로 받고 따뜻한 답장을 써줘요.", tags: ["공감/배려", "글쓰기"], extrovert: false, structured: false },
+    { title: "안전 점검단", emoji: "🦺", desc: "교실의 위험한 곳을 점검하고 알려줘요.", tags: ["관찰력", "정리정돈"], extrovert: false, structured: true },
+    { title: "응급처치 안내판 만들기", emoji: "🩹", desc: "다치면 어떻게 해야 하는지 안내 자료를 만들어요.", tags: ["그림그리기", "정리정돈"], extrovert: false, structured: true },
+    { title: "급식·영양 소개 게시판", emoji: "🥗", desc: "오늘의 급식 영양 정보를 알기 쉽게 소개해요.", tags: ["정리정돈", "글쓰기"], extrovert: false, structured: true }
+  ],
+  "과학·기술": [
+    { title: "미니 과학쇼 운영", emoji: "🔬", desc: "한 달에 한 번 재미있는 과학 실험을 보여줘요.", tags: ["과학실험", "말하기/발표"], extrovert: true, structured: true },
+    { title: "학급 IT 도우미", emoji: "💻", desc: "태블릿이나 프로그램 사용법을 친구들에게 알려줘요.", tags: ["컴퓨터/기술", "공감/배려"], extrovert: false, structured: false },
+    { title: "발명 아이디어 게시판", emoji: "💡", desc: "생활을 편리하게 할 아이디어를 모아 소개해요.", tags: ["계산/논리", "만들기/손재주"], extrovert: false, structured: false },
+    { title: "코딩 미니 특강", emoji: "🧑‍💻", desc: "간단한 코딩이나 게임 만들기를 알려줘요.", tags: ["컴퓨터/기술", "말하기/발표"], extrovert: true, structured: true },
+    { title: "관찰일지 자료 만들기", emoji: "📓", desc: "식물, 날씨 등을 기록하는 자료를 만들어요.", tags: ["관찰력", "정리정돈"], extrovert: false, structured: true }
+  ],
+  "서비스·관광": [
+    { title: "학급 여행 코스 추천단", emoji: "🗺️", desc: "현장체험학습 갈 곳을 조사해서 추천해요.", tags: ["여행", "정리정돈"], extrovert: false, structured: true },
+    { title: "반가운 안내 도우미", emoji: "🙋", desc: "새로 온 친구나 손님에게 학교를 안내해줘요.", tags: ["말하기/발표", "공감/배려"], extrovert: true, structured: false },
+    { title: "학급 이벤트 기획단", emoji: "🎉", desc: "생일, 파티 같은 학급 행사를 기획해요.", tags: ["리더십", "협동"], extrovert: true, structured: true },
+    { title: "급식 도우미", emoji: "🍱", desc: "배식과 정리를 도와줘요.", tags: ["협동", "정리정돈"], extrovert: false, structured: true },
+    { title: "간식 나눔 카페", emoji: "☕", desc: "특별한 날 간식을 준비해서 나눠요.", tags: ["요리", "협동"], extrovert: true, structured: false }
+  ],
+  "공공·안전": [
+    { title: "등하교 안전 지킴이", emoji: "🚸", desc: "안전한 등하교를 위한 캠페인을 해요.", tags: ["리더십", "공감/배려"], extrovert: true, structured: true },
+    { title: "줄서기·정돈 캠페인", emoji: "🚶", desc: "질서를 지키자는 캠페인을 열어요.", tags: ["정리정돈", "리더십"], extrovert: true, structured: true },
+    { title: "대피훈련 도우미", emoji: "🧯", desc: "화재·지진 대피 훈련을 도와줘요.", tags: ["정리정돈", "리더십"], extrovert: false, structured: true },
+    { title: "학급 규칙 회의 진행", emoji: "📢", desc: "학급 규칙을 정하는 회의를 이끌어요.", tags: ["말하기/발표", "리더십"], extrovert: true, structured: true },
+    { title: "분실물 관리 도우미", emoji: "🧦", desc: "잃어버린 물건을 찾아주는 역할을 해요.", tags: ["정리정돈", "공감/배려"], extrovert: false, structured: true }
+  ],
+  "문화·예술": [
+    { title: "학급 갤러리 운영", emoji: "🖼️", desc: "친구들의 그림을 전시하고 소개해요.", tags: ["그림그리기", "정리정돈"], extrovert: false, structured: true },
+    { title: "미술 특강 열기", emoji: "🎨", desc: "그림 그리는 방법을 친구들에게 알려줘요.", tags: ["그림그리기", "말하기/발표"], extrovert: true, structured: true },
+    { title: "학급 음악회 기획", emoji: "🎵", desc: "노래나 연주 발표회를 열어요.", tags: ["노래/음악", "리더십"], extrovert: true, structured: true },
+    { title: "교실 꾸미기 디자인팀", emoji: "🖌️", desc: "교실을 예쁘게 꾸미는 아이디어를 내요.", tags: ["그림그리기", "만들기/손재주"], extrovert: false, structured: false },
+    { title: "이야기책 만들기 프로젝트", emoji: "📕", desc: "친구들과 함께 동화책을 만들어요.", tags: ["글쓰기", "그림그리기"], extrovert: false, structured: false }
+  ],
+  "미디어": [
+    { title: "학급 소식지 만들기", emoji: "📰", desc: "매달 학급 소식지를 만들어 게시해요.", tags: ["글쓰기", "정리정돈"], extrovert: false, structured: true },
+    { title: "학급 영상 제작단", emoji: "🎬", desc: "학급 행사를 촬영하고 편집해요.", tags: ["사진/영상", "컴퓨터/기술"], extrovert: false, structured: false },
+    { title: "아침 방송 진행", emoji: "🎙️", desc: "아침 안내 방송을 맡아서 진행해요.", tags: ["말하기/발표"], extrovert: true, structured: true },
+    { title: "사진 기록단", emoji: "📷", desc: "학급의 소중한 순간을 사진으로 남겨요.", tags: ["사진/영상", "관찰력"], extrovert: false, structured: false },
+    { title: "친구 인터뷰 코너", emoji: "🎤", desc: "친구를 인터뷰해서 학급에 소개해요.", tags: ["말하기/발표", "글쓰기"], extrovert: true, structured: false }
+  ],
+  "디자인·건축": [
+    { title: "교실 환경 디자인팀", emoji: "🧩", desc: "게시판이나 자리 배치 아이디어를 내요.", tags: ["만들기/손재주", "그림그리기"], extrovert: false, structured: false },
+    { title: "학급 로고·마스코트 디자인", emoji: "🦋", desc: "우리 반을 나타내는 캐릭터를 만들어요.", tags: ["그림그리기", "만들기/손재주"], extrovert: false, structured: false },
+    { title: "행사 포스터 디자인", emoji: "🖍️", desc: "학급 행사 포스터를 만들어요.", tags: ["그림그리기", "정리정돈"], extrovert: false, structured: true },
+    { title: "미니 모형 만들기", emoji: "🏗️", desc: "상상하는 건물이나 마을을 모형으로 만들어요.", tags: ["만들기/손재주", "계산/논리"], extrovert: false, structured: false },
+    { title: "물품 정리함 라벨 디자인", emoji: "🏷️", desc: "학급 물건을 잘 찾도록 라벨을 만들어요.", tags: ["정리정돈", "만들기/손재주"], extrovert: false, structured: true }
+  ],
+  "스포츠": [
+    { title: "준비운동 리더", emoji: "🤸", desc: "체육 시간마다 준비운동을 이끌어요.", tags: ["운동", "리더십"], extrovert: true, structured: true },
+    { title: "학급 운동회 기획", emoji: "🏆", desc: "운동회 종목을 기획하고 진행해요.", tags: ["운동", "리더십"], extrovert: true, structured: true },
+    { title: "쉬는시간 운동 모임", emoji: "⚽", desc: "쉬는 시간에 함께 운동할 친구를 모아요.", tags: ["운동", "협동"], extrovert: true, structured: false },
+    { title: "미니리그 개최", emoji: "🏅", desc: "줄넘기, 피구 등 작은 대회를 열어요.", tags: ["운동", "리더십"], extrovert: true, structured: true },
+    { title: "체육용품 관리", emoji: "🧺", desc: "체육 용품을 정리하고 관리해요.", tags: ["정리정돈", "운동"], extrovert: false, structured: true }
+  ],
+  "자연·환경": [
+    { title: "학급 텃밭·화분 가꾸기", emoji: "🪴", desc: "교실 식물을 정성껏 돌봐요.", tags: ["동식물 돌보기", "관찰력"], extrovert: false, structured: true },
+    { title: "분리수거 캠페인", emoji: "♻️", desc: "분리수거를 잘하자는 캠페인을 해요.", tags: ["정리정돈", "자연"], extrovert: false, structured: true },
+    { title: "에너지 절약 캠페인", emoji: "💡", desc: "전기 아끼기 캠페인을 진행해요.", tags: ["리더십", "정리정돈"], extrovert: true, structured: true },
+    { title: "자연관찰 동아리", emoji: "🔍", desc: "학교 주변 동식물을 관찰하고 기록해요.", tags: ["관찰력", "자연"], extrovert: false, structured: false },
+    { title: "환경 포스터 만들기", emoji: "🌱", desc: "환경을 지키자는 포스터를 만들어요.", tags: ["그림그리기", "자연"], extrovert: false, structured: true }
+  ],
+  "법·행정": [
+    { title: "학급 회의 진행", emoji: "🗣️", desc: "학급 회의를 이끌고 의견을 정리해요.", tags: ["말하기/발표", "리더십"], extrovert: true, structured: true },
+    { title: "학급 투표 진행 도우미", emoji: "🗳️", desc: "학급 일을 정할 때 투표를 도와요.", tags: ["정리정돈", "계산/논리"], extrovert: false, structured: true },
+    { title: "다툼 해결 도우미", emoji: "🤲", desc: "친구들 사이 다툼을 잘 풀도록 도와줘요.", tags: ["공감/배려", "말하기/발표"], extrovert: false, structured: false },
+    { title: "학급 규칙 안내판 관리", emoji: "📋", desc: "학급 규칙을 정리해서 안내해요.", tags: ["정리정돈", "글쓰기"], extrovert: false, structured: true },
+    { title: "학급 예산(간식비) 관리", emoji: "💰", desc: "학급에서 모은 돈을 정리하고 관리해요.", tags: ["계산/논리", "정리정돈"], extrovert: false, structured: true }
+  ],
+  "동물·생명": [
+    { title: "교실 동물·곤충 돌봄이", emoji: "🐹", desc: "교실에서 기르는 동물을 돌봐요.", tags: ["동식물 돌보기", "관찰력"], extrovert: false, structured: true },
+    { title: "동물 보호 캠페인", emoji: "🐾", desc: "동물을 사랑하자는 캠페인 포스터를 만들어요.", tags: ["그림그리기", "동물"], extrovert: false, structured: true },
+    { title: "생명 존중 그림책 소개", emoji: "📗", desc: "생명의 소중함을 담은 책을 소개해요.", tags: ["책읽기", "말하기/발표"], extrovert: true, structured: false },
+    { title: "관찰일지 운영", emoji: "🔬", desc: "식물이나 곤충의 변화를 기록해요.", tags: ["관찰력", "정리정돈"], extrovert: false, structured: true },
+    { title: "유기동물 돕기 캠페인", emoji: "🐶", desc: "유기동물을 돕기 위한 모금 캠페인을 기획해요.", tags: ["리더십", "동물"], extrovert: true, structured: true }
+  ]
+};
+
+/* =========================================================
+   상태 & DOM
+========================================================= */
+const state = {
+  name: "",
+  job: "",
+  field: "",
+  strengths: [],
+  interests: [],
+  mbti: { EI: null, SN: null, TF: null, JP: null },
+  lastRecommendation: []
+};
+
+const $ = (sel) => document.querySelector(sel);
+const el = {
+  screenForm: $("#screen-form"),
+  screenResult: $("#screen-result"),
+  nameInput: $("#input-name"),
+  jobSelect: $("#input-job"),
+  strengthChips: $("#strength-chips"),
+  interestChips: $("#interest-chips"),
+  submitBtn: $("#submit-btn"),
+  jobWarning: $("#job-warning"),
+  resultName: $("#result-name"),
+  resultJobWrap: $("#result-job-wrap"),
+  resultJob: $("#result-job"),
+  activityList: $("#activity-list"),
+  rerollBtn: $("#reroll-btn"),
+  copyBtn: $("#copy-btn"),
+  restartBtn: $("#restart-btn"),
+  copyToast: $("#copy-toast"),
+};
+
+/* =========================================================
+   초기화
+========================================================= */
+function init() {
+  populateJobSelect();
+  populateChips(el.strengthChips, STRENGTH_OPTIONS, state.strengths, 4);
+  populateChips(el.interestChips, INTEREST_OPTIONS, state.interests, 4);
+  bindMbtiButtons();
+  bindFormEvents();
+  updateSubmitState();
+}
+
+function populateJobSelect() {
+  const fields = [...new Set(Object.values(JOB_FIELD_MAP))];
+  el.jobSelect.innerHTML = '<option value="">직업을 선택해 주세요</option>';
+
+  fields.forEach((field) => {
+    const group = document.createElement("optgroup");
+    group.label = field;
+    Object.entries(JOB_FIELD_MAP)
+      .filter(([, f]) => f === field)
+      .forEach(([jobName]) => {
+        const opt = document.createElement("option");
+        opt.value = jobName;
+        opt.textContent = jobName;
+        group.appendChild(opt);
+      });
+    el.jobSelect.appendChild(group);
+  });
+}
+
+function populateChips(container, options, selectedArray, maxCount) {
+  container.innerHTML = "";
+  options.forEach((label) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = label;
+    chip.addEventListener("click", () => {
+      const idx = selectedArray.indexOf(label);
+      if (idx > -1) {
+        selectedArray.splice(idx, 1);
+        chip.classList.remove("selected");
+      } else {
+        if (selectedArray.length >= maxCount) return;
+        selectedArray.push(label);
+        chip.classList.add("selected");
+      }
+    });
+    container.appendChild(chip);
+  });
+}
+
+function bindMbtiButtons() {
+  document.querySelectorAll(".mbti-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const axis = btn.dataset.axis;
+      const value = btn.dataset.value;
+      const isSame = state.mbti[axis] === value;
+
+      document.querySelectorAll(`.mbti-btn[data-axis="${axis}"]`).forEach((b) => b.classList.remove("selected"));
+
+      if (isSame) {
+        state.mbti[axis] = null;
+      } else {
+        state.mbti[axis] = value;
+        btn.classList.add("selected");
+      }
+    });
+  });
+}
+
+function bindFormEvents() {
+  el.jobSelect.addEventListener("change", () => {
+    updateSubmitState();
+    el.jobWarning.classList.add("hidden");
+  });
+
+  el.submitBtn.addEventListener("click", () => {
+    if (!el.jobSelect.value) {
+      el.jobWarning.classList.remove("hidden");
+      return;
+    }
+    state.name = el.nameInput.value.trim();
+    state.job = el.jobSelect.value;
+    state.field = JOB_FIELD_MAP[state.job];
+    showResult();
+  });
+
+  el.rerollBtn.addEventListener("click", showResult);
+  el.copyBtn.addEventListener("click", copyResultText);
+  el.restartBtn.addEventListener("click", () => {
+    switchScreen(el.screenResult, el.screenForm);
+  });
+}
+
+function updateSubmitState() {
+  el.submitBtn.disabled = !el.jobSelect.value;
+}
+
+function switchScreen(hideEl, showEl) {
+  hideEl.classList.remove("active");
+  showEl.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* =========================================================
+   추천 알고리즘
+========================================================= */
+function computeRecommendations() {
+  const pool = ACTIVITY_BANK[state.field] || [];
+
+  const scored = pool.map((activity) => {
+    let score = 0;
+    let matchedStrength = null;
+    let matchedInterest = null;
+
+    activity.tags.forEach((tag) => {
+      if (state.strengths.includes(tag)) {
+        score += 3;
+        if (!matchedStrength) matchedStrength = tag;
+      }
+      if (state.interests.includes(tag)) {
+        score += 3;
+        if (!matchedInterest) matchedInterest = tag;
+      }
+    });
+
+    if (state.mbti.EI === "E" && activity.extrovert) score += 2;
+    if (state.mbti.EI === "I" && !activity.extrovert) score += 2;
+    if (state.mbti.JP === "J" && activity.structured) score += 1;
+    if (state.mbti.JP === "P" && !activity.structured) score += 1;
+
+    // 동점 처리를 위한 약간의 무작위성 (다시 추천받기 시 순서가 달라짐)
+    score += Math.random() * 0.9;
+
+    return { ...activity, score, matchedStrength, matchedInterest };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  // 최소 3개, 최대 4개 추천 (분야당 활동이 5개이므로 상위 4개를 보여줌)
+  return scored.slice(0, 4);
+}
+
+function buildReasonText(activity) {
+  const parts = [];
+
+  if (activity.matchedStrength) {
+    parts.push(`잘하는 '${activity.matchedStrength}'을(를) 살릴 수 있어요`);
+  }
+  if (activity.matchedInterest && activity.matchedInterest !== activity.matchedStrength) {
+    parts.push(`좋아하는 '${activity.matchedInterest}'와도 잘 어울려요`);
+  }
+  if (state.mbti.EI === "E" && activity.extrovert) {
+    parts.push("사람들과 함께하는 걸 좋아하는 너의 성격과도 잘 맞아요");
+  }
+  if (state.mbti.EI === "I" && !activity.extrovert) {
+    parts.push("차분히 몰입하는 너의 성격과도 잘 맞아요");
+  }
+
+  if (parts.length === 0) {
+    parts.push(`${state.job}에 관심 있는 너에게 좋은 경험이 될 거예요`);
+  }
+
+  // 문장이 너무 길어지지 않도록 최대 2개까지만 사용
+  return parts.slice(0, 2).join(", ") + "!";
+}
+
+/* =========================================================
+   결과 렌더링
+========================================================= */
+function showResult() {
+  const recommendations = computeRecommendations();
+  state.lastRecommendation = recommendations;
+
+  el.resultName.textContent = state.name ? `${state.name}` : "나";
+  if (state.job) {
+    el.resultJobWrap.style.display = "inline";
+    el.resultJob.textContent = state.job;
+  } else {
+    el.resultJobWrap.style.display = "none";
+  }
+
+  el.activityList.innerHTML = recommendations
+    .map(
+      (act) => `
+      <div class="activity-card">
+        <div class="activity-top">
+          <span class="activity-emoji">${act.emoji}</span>
+          <span class="activity-title">${act.title}</span>
+        </div>
+        <p class="activity-desc">${act.desc}</p>
+        <span class="activity-reason">💡 ${buildReasonText(act)}</span>
+      </div>
+    `
+    )
+    .join("");
+
+  switchScreen(el.screenForm, el.screenResult);
+}
+
+function copyResultText() {
+  const lines = [];
+  lines.push(`[학급 기여 활동 추천 결과]`);
+  lines.push(`이름: ${state.name || "(미입력)"}`);
+  lines.push(`직업: ${state.job} (${state.field} 분야)`);
+  lines.push("");
+  state.lastRecommendation.forEach((act, i) => {
+    lines.push(`${i + 1}. ${act.emoji} ${act.title} - ${act.desc}`);
+  });
+
+  const text = lines.join("\n");
+
+  const showToast = () => {
+    el.copyToast.classList.add("show");
+    setTimeout(() => el.copyToast.classList.remove("show"), 2000);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => fallbackCopy(text, showToast));
+  } else {
+    fallbackCopy(text, showToast);
+  }
+}
+
+function fallbackCopy(text, onDone) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand("copy");
+    onDone();
+  } catch (err) {
+    alert("복사에 실패했어요. 화면을 캡처해 주세요!");
+  }
+  document.body.removeChild(textarea);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
